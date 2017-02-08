@@ -6,6 +6,7 @@ import javax.json.stream.JsonParser.Event;
 import java.io.*;
 import java.math.*;
 import java.net.URL;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
 import org.openqa.selenium.*;
@@ -20,17 +21,30 @@ public class JSON_API_eCom {
 		String ip_Pound = "92.40.254.196";
 		String ip_Hryvnia = "93.183.203.67";
 		String ip_Ruble = "213.87.141.36";
+		
+		Properties properties = new Properties();
+		
+		try {
+			properties.load(new FileInputStream("./src/main/resources/Test.properties"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		////////////////////////////////////////////////////////////////////////////////
 
 		Logger logger = Logger.getLogger("");
 		logger.setLevel(Level.OFF);
 
-		String url = "https://www.amazon.com/All-New-Amazon-Echo-Dot-Add-Alexa-To-Any-Room/dp/B01DFKC2SO";
+		//String url = "https://www.amazon.com/All-New-Amazon-Echo-Dot-Add-Alexa-To-Any-Room/dp/B01DFKC2SO";
+		String url = null;
+		url = properties.getProperty("url");
 
 		WebDriver driver;
 		System.setProperty("webdriver.chrome.driver",
 				"C:/workspace47/JSON_API/src/main/resources/browsers/pc/chromedriver.exe");
+		   
 		System.setProperty("webdriver.chrome.silentOutput", "true");
 		ChromeOptions option = new ChromeOptions();
 		option.addArguments("-start-fullscreen");
