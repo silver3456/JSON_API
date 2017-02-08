@@ -6,7 +6,6 @@ import javax.json.stream.JsonParser.Event;
 import java.io.*;
 import java.math.*;
 import java.net.URL;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
 import org.openqa.selenium.*;
@@ -14,120 +13,125 @@ import org.openqa.selenium.chrome.*;
 
 public class JSON_API_eCom {
 	public static void main(String[] args) throws InterruptedException, IOException {
-		String us_currency_symbol = "$";
 
-		String ip_Euro = "88.191.179.56";
-		String ip_Yuan = "61.135.248.220";
-		String ip_Pound = "92.40.254.196";
-		String ip_Hryvnia = "93.183.203.67";
-		String ip_Ruble = "213.87.141.36";
-		
-		Properties properties = new Properties();
-		
+		String csvFile = "./src/main/resources/Product.csv";
+		BufferedReader br = null;
+		String line = null;
+		String SplitBy = ",";
+		String test_case_id = null;
+		String url = null;
+	
+
 		try {
-			properties.load(new FileInputStream("./src/main/resources/Test.properties"));
+			br = new BufferedReader(new FileReader(csvFile));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		////////////////////////////////////////////////////////////////////////////////
+		while ((line = br.readLine()) != null) {
 
-		Logger logger = Logger.getLogger("");
-		logger.setLevel(Level.OFF);
+			String[] csv = line.split(SplitBy);
 
-		//String url = "https://www.amazon.com/All-New-Amazon-Echo-Dot-Add-Alexa-To-Any-Room/dp/B01DFKC2SO";
-		String url = null;
-		url = properties.getProperty("url");
+			test_case_id = csv[0];
+			url = csv[1];
 
-		WebDriver driver;
-		System.setProperty("webdriver.chrome.driver",
-				"C:/workspace47/JSON_API/src/main/resources/browsers/pc/chromedriver.exe");
-		   
-		System.setProperty("webdriver.chrome.silentOutput", "true");
-		ChromeOptions option = new ChromeOptions();
-		option.addArguments("-start-fullscreen");
-		driver = new ChromeDriver(option);
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-		driver.get(url);
+			String us_currency_symbol = "$";
 
-		// All-New Echo Dot (2nd Generation) - Black
-		String product_title = driver.findElement(By.id("productTitle")).getText();
-		double original_price = Double
-				.parseDouble(driver.findElement(By.id("priceblock_ourprice")).getText().replace("$", "")); // 49.99
-		driver.quit();
+			String ip_Euro = "88.191.179.56";
+			String ip_Yuan = "61.135.248.220";
+			String ip_Pound = "92.40.254.196";
+			String ip_Hryvnia = "93.183.203.67";
+			String ip_Ruble = "213.87.141.36";
 
-		////////////////////////////////////////////////////////////////////////////////
+			
+			Logger logger = Logger.getLogger("");
+			logger.setLevel(Level.OFF);
 
-		URL api_url = new URL("http://www.geoplugin.net/json.gp?ip=" + ip_Hryvnia);
+			// String url =
+			// "https://www.amazon.com/All-New-Amazon-Echo-Dot-Add-Alexa-To-Any-Room/dp/B01DFKC2SO";
 
-		// URL api_url = new URL("http://www.geoplugin.net/json.gp?ip=" +
-		// ip_Euro);
+			WebDriver driver;
+			System.setProperty("webdriver.chrome.driver",
+					"C:/workspace47/JSON_API/src/main/resources/browsers/pc/chromedriver.exe");
+			System.setProperty("webdriver.chrome.silentOutput", "true");
+			ChromeOptions option = new ChromeOptions();
+			option.addArguments("-start-fullscreen");
+			driver = new ChromeDriver(option);
+			driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+			driver.get(url);
 
-		final String e_cName = "geoplugin_countryName";
-		final String e_cCode = "geoplugin_currencyCode";
-		final String e_cSymbol = "geoplugin_currencySymbol_UTF8";
-		String country_name = null;
-		String currency_code = null;
-		String currency_symbol = null;
-		InputStream is = api_url.openStream();
-		JsonParser parser = Json.createParser(is);
+			// All-New Echo Dot (2nd Generation) - Black
+			String product_title = driver.findElement(By.id("productTitle")).getText();
+			double original_price = Double
+					.parseDouble(driver.findElement(By.id("priceblock_ourprice")).getText().replace("$", "")); // 49.99
+			driver.quit();
 
-		while (parser.hasNext()) {
-			Event e = parser.next();
-			if (e == Event.KEY_NAME) {
-				switch (parser.getString()) {
 
-				case e_cName:
-					parser.next();
-					country_name = parser.getString();
-					break; // France
-				case e_cCode:
-					parser.next();
-					currency_code = parser.getString();
-					break; // EUR
-				case e_cSymbol:
-					parser.next();
-					currency_symbol = parser.getString();
-					break;
+			URL api_url = new URL("http://www.geoplugin.net/json.gp?ip=" + ip_Hryvnia);
+
+			// URL api_url = new URL("http://www.geoplugin.net/json.gp?ip=" +
+			// ip_Euro);
+
+			final String e_cName = "geoplugin_countryName";
+			final String e_cCode = "geoplugin_currencyCode";
+			final String e_cSymbol = "geoplugin_currencySymbol_UTF8";
+			String country_name = null;
+			String currency_code = null;
+			String currency_symbol = null;
+			InputStream is = api_url.openStream();
+			JsonParser parser = Json.createParser(is);
+
+			while (parser.hasNext()) {
+				Event e = parser.next();
+				if (e == Event.KEY_NAME) {
+					switch (parser.getString()) {
+
+					case e_cName:
+						parser.next();
+						country_name = parser.getString();
+						break; // France
+					case e_cCode:
+						parser.next();
+						currency_code = parser.getString();
+						break; // EUR
+					case e_cSymbol:
+						parser.next();
+						currency_symbol = parser.getString();
+						break;
+					}
 				}
-			}
-		} // €
+			} // €
 
-		////////////////////////////////////////////////////////////////////////////////
+			
+			double rate = 0;
+			String rate_id = "USD" + currency_code; // USDEUR
+			// select * from yahoo.finance.xchange where pair in ("USDEUR")
 
-		double rate = 0;
-		String rate_id = "USD" + currency_code; // USDEUR
-		// select * from yahoo.finance.xchange where pair in ("USDEUR")
+			String rate_sql = "select%20*%20from%20yahoo.finance.xchange%20where%20pair%20in%20(\"" + rate_id + "\")";
+			URL rate_url = new URL("http://query.yahooapis.com/v1/public/yql?q=" + rate_sql
+					+ "&format=json&env=store://datatables.org/alltableswithkeys");
 
-		String rate_sql = "select%20*%20from%20yahoo.finance.xchange%20where%20pair%20in%20(\"" + rate_id + "\")";
-		URL rate_url = new URL("http://query.yahooapis.com/v1/public/yql?q=" + rate_sql
-				+ "&format=json&env=store://datatables.org/alltableswithkeys");
+			InputStream is2 = rate_url.openStream();
+			JsonParser jp = Json.createParser(is2);
+			is2 = rate_url.openStream();
+			jp = Json.createParser(is2);
 
-		InputStream is2 = rate_url.openStream();
-		JsonParser jp = Json.createParser(is2);
-		is2 = rate_url.openStream();
-		jp = Json.createParser(is2);
+			while (jp.hasNext()) {
+				Event e = jp.next();
+				if (e == Event.KEY_NAME) {
+					switch (jp.getString()) {
 
-		while (jp.hasNext()) {
-			Event e = jp.next();
-			if (e == Event.KEY_NAME) {
-				switch (jp.getString()) {
-
-				case "Rate":
-					jp.next();
-					rate = Double.parseDouble(jp.getString());
-					break;
+					case "Rate":
+						jp.next();
+						rate = Double.parseDouble(jp.getString());
+						break;
+					}
 				}
-			}
-		} // 0.9345
+			} // 0.9345
 
-		////////////////////////////////////////////////////////////////////////////////
-
-		double eur_price = new BigDecimal(original_price * rate).setScale(2, RoundingMode.HALF_UP).doubleValue();
-		System.out.println("Item: " + product_title + "; " + "US Price: " + us_currency_symbol + original_price + "; "
-				+ "for country: " + country_name + "; " + "Local Price: " + currency_symbol + eur_price);
+			double eur_price = new BigDecimal(original_price * rate).setScale(2, RoundingMode.HALF_UP).doubleValue();
+			System.out.println("Item: " + product_title + "; " + "US Price: " + us_currency_symbol + original_price
+					+ "; " + "for country: " + country_name + "; " + "Local Price: " + currency_symbol + eur_price);
+		}
 	}
-
 }
